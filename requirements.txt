@@ -1,0 +1,10 @@
+ultralytics==8.4.174
+torch
+openvino
+opencv-python>=4.7,!=4.13.0.90
+numpy>=1.23
+scipy
+psutil>=5.8
+starlette
+uvicorn
+httpx

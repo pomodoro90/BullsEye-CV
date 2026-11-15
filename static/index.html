@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1318">
+<title>Darts</title>
+<style>
+:root{
+  --bg:#0f1318; --panel:#1a2029; --panel2:#222b36; --line:#2c3743; --text:#e8edf2; --dim:#8fa0b2;
+  --accent:#3ddc97; --warn:#ffb020; --bad:#ff5d5d; --cur:#2a6df4; --co:#ffb020;
+  --r:14px;
+}
+@media (prefers-color-scheme: light){
+  :root{ --bg:#eef1f5; --panel:#fff; --panel2:#e6ebf1; --line:#d3dbe4; --text:#16202a; --dim:#5d6f82; --cur:#1f5fe0; --accent:#14a46a; --co:#c46f00; }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding:0 16px calc(24px + env(safe-area-inset-bottom))}
+.wrap{max-width:980px;margin:0 auto}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(10px + env(safe-area-inset-top)) 0 8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+h1{font-size:20px;margin:0;letter-spacing:.3px}
+.pill{font-size:12.5px;padding:4px 10px;border-radius:999px;background:var(--panel2);color:var(--dim);display:inline-flex;align-items:center;gap:6px;max-width:100%}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--dim);display:inline-block}
+.pill.ok i{background:var(--accent)} .pill.warn i{background:var(--warn)} .pill.bad i{background:var(--bad)}
+.tabs{margin-left:auto;display:flex;gap:4px;background:var(--panel2);padding:3px;border-radius:12px}
+.tabs button{border:0;background:none;color:var(--dim);padding:8px 14px;border-radius:9px;font:inherit;font-weight:600;min-height:40px}
+.tabs button.on{background:var(--panel);color:var(--text)}
+button{font:inherit;color:inherit}
+.btn{border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:12px 14px;min-height:48px;font-weight:600;cursor:pointer}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--accent);border-color:transparent;color:#05140d}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.4}
+.card{background:var(--panel);border-radius:var(--r);padding:14px}
+.stack>*+*{margin-top:12px}
+.banner{border-radius:var(--r);padding:12px 14px;font-weight:600}
+.banner.sim{background:#3a2d00;color:#ffd166}
+.banner.wait{background:#12324a;color:#8fd0ff}
+.banner.win{background:var(--accent);color:#05140d;font-size:22px;text-align:center;padding:18px}
+.banner.warnb{background:#3a2d00;color:#ffd166;font-weight:500}
+.players{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.pl{background:var(--panel);border:2px solid transparent;border-radius:var(--r);padding:12px 14px}
+.pl.cur{border-color:var(--cur)}
+.pl .nm{font-weight:700;display:flex;justify-content:space-between;gap:6px}
+.pl .nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl .nm small{color:var(--cur);font-weight:700}
+.pl .rem{font-size:clamp(40px,12vw,64px);font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums}
+.pl .meta{color:var(--dim);font-size:13px}
+.pl .legs{color:var(--cur);font-weight:800}
+.matchbar{display:flex;justify-content:space-between;color:var(--dim);font-size:14px;font-weight:600}
+.turnhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px}
+.turnhead b{font-size:17px}.turnhead span{color:var(--dim);font-size:14px;text-align:right}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slot{border:2px dashed var(--line);background:none;border-radius:12px;min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:var(--dim);padding:4px}
+.slot small{font-size:13px;font-weight:600;color:var(--dim)}
+.slot.full{border-style:solid;border-color:var(--line);background:var(--panel2);color:var(--text);cursor:pointer}
+.slot.unc{border-color:var(--warn)}
+.slot.unc small::before{content:"⚠ "}
+.slot.bust{border-color:var(--bad);color:var(--bad)}
+.slot.old{opacity:.65}
+.co{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:10px 14px}
+.cotitle{color:var(--dim);font-size:13px;font-weight:600;margin-bottom:2px}
+.coopt{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-weight:800;font-size:clamp(20px,5.5vw,30px);line-height:1.2;color:var(--co)}
+.coopt.alt{font-size:clamp(17px,4.6vw,22px);font-weight:700;color:var(--text);opacity:.7;margin-top:2px}
+.coopt i{font-style:normal;color:var(--dim);font-weight:400;font-size:.6em}
+.tabs button{padding:8px 10px}
+.stile{background:var(--panel2);border-radius:12px;padding:10px 12px}
+.stile b{display:block;font-size:26px;font-variant-numeric:tabular-nums;line-height:1.15}
+.stile span{color:var(--dim);font-size:13px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.plrow{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;background:var(--panel);border:0;border-radius:var(--r);padding:14px;color:var(--text);font:inherit;cursor:pointer;min-height:56px}
+.plrow b{font-size:18px}.plrow .big{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
+.grow{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:15px}
+.grow:first-of-type{border-top:0}
+.grow .win{color:var(--accent);font-weight:700}.grow .lose{color:var(--dim)}
+.xbtn{border:0;background:none;color:var(--dim);font-size:18px;padding:6px 10px;min-height:40px;cursor:pointer}
+.sec{font-weight:700;margin:2px 0 8px}
+.tabs{overflow-x:auto;flex:1 0 100%;margin-left:0}
+.tabs button{white-space:nowrap;flex:1;padding:8px 4px;font-size:14px}
+a.btn{display:block}
+.mp{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border-radius:var(--r);padding:10px 12px}
+.mp .lb{font-size:34px;font-weight:900;min-width:76px}
+.mp .lb small{display:block;font-size:12px;font-weight:600;color:var(--dim)}
+.mp .bt{display:flex;gap:6px}
+.mp .bt .btn{min-width:52px;padding:8px 10px;font-size:20px}
+.txt{width:100%;box-sizing:border-box;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--text);font:inherit;min-height:46px}
+.bigacc{font-size:44px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
+table.mt{width:100%;border-collapse:collapse;font-size:14px}
+table.mt td,table.mt th{padding:6px 4px;border-top:1px solid var(--line);text-align:right}
+table.mt th{color:var(--dim);font-weight:600}
+table.mt td:first-child,table.mt th:first-child{text-align:left}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{background:var(--panel2);border-radius:999px;padding:6px 12px;font-weight:700;color:var(--text)}
+.hint{display:flex;gap:8px;align-items:center;color:var(--dim);font-size:14px;flex-wrap:wrap}
+.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media (min-width:560px){.actions{grid-template-columns:repeat(4,1fr)}}
+.layout{display:grid;gap:12px}
+@media (min-width:900px){.layout{grid-template-columns:1.1fr .9fr;align-items:start}}
+svg.board{width:100%;max-width:440px;display:block;margin:0 auto}
+details.log summary{cursor:pointer;color:var(--dim);padding:6px 0}
+.logrow{display:flex;gap:10px;font-size:14px;padding:5px 0;border-top:1px solid var(--line)}
+.logrow .t{color:var(--dim);min-width:64px;font-variant-numeric:tabular-nums}
+.logrow .x{color:var(--dim)}
+label.f{display:block;color:var(--dim);font-size:13px;margin:12px 0 6px}
+input[type=text]{width:100%;font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;min-height:48px}
+.row{display:flex;gap:8px;align-items:center}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg .btn{flex:1;min-width:64px}
+.seg .btn.on{background:var(--cur);border-color:transparent;color:#fff}
+.chk{display:flex;align-items:center;gap:10px;padding:10px 0}
+.chk input{width:22px;height:22px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;z-index:20}
+#modal.open{display:flex}
+.sheet{background:var(--panel);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
+.sheet h3{margin:0 0 10px;font-size:17px}
+.mult{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.mult .btn.on{background:var(--cur);color:#fff;border-color:transparent}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.grid .btn{padding:0;min-height:54px;font-size:18px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#000d;color:#fff;padding:10px 16px;border-radius:12px;z-index:30;display:none;max-width:90vw;text-align:center}
+#camimg{width:100%;border-radius:var(--r);background:#000;display:block}
+.dim{color:var(--dim)}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🎯 Darts</h1>
+    <span id="conn" class="pill"><i></i><span>kapcsolódás...</span></span>
+    <nav class="tabs">
+      <button id="tab-game" class="on" data-tab="game">Játék</button>
+      <button id="tab-cams" data-tab="cams">Kamerák</button>
+      <button id="tab-stats" data-tab="stats">Statisztika</button>
+      <button id="tab-meas" data-tab="meas">Mérés</button>
+      <button id="tab-sys" data-tab="sys">Rendszer</button>
+    </nav>
+  </header>
+
+  <main id="game" class="stack"></main>
+
+  <main id="cams" class="stack hidden">
+    <div class="card stack">
+      <div class="dim" style="font-size:14px">A kamerák képe a tábla gyűrűivel és a felismert nyilakkal. Ha a gyűrűk nem fedik a táblát, a kamerák vagy a tábla elmozdult – újra kell kalibrálni.</div>
+      <img id="camimg" class="hidden" alt="">
+      <div id="camnote" class="dim"></div>
+    </div>
+    <div class="card stack">
+      <div class="dim" style="font-size:14px">Ha a program „szellem-nyilat” lát, vagy a tábla kiürítése után is marad nyíl a képen, nullázd a felismerés tábla-állapotát (a pontszám megmarad).</div>
+      <button class="btn danger" id="boardreset">Tábla nullázása (felismerés)</button>
+    </div>
+  </main>
+
+  <main id="stats" class="stack hidden"><div id="statsbody"></div></main>
+
+  <main id="meas" class="stack hidden">
+    <div class="card stack" id="mset"></div>
+    <div id="mpend" class="stack"></div>
+    <div id="msum" class="stack"></div>
+  </main>
+
+  <main id="sys" class="stack hidden">
+    <div class="card stack">
+      <div class="dim" style="font-size:14px">A játék állása mentve marad. A gép leállítása vagy újraindítása 15 másodperc múlva történik, addig visszavonhatod.</div>
+      <button class="btn danger" id="pwroff">⏻ Gép leállítása</button>
+      <button class="btn" id="pwrrestart">↻ Gép újraindítása</button>
+      <button class="btn primary hidden" id="pwrcancel">Mégsem – visszavonom</button>
+      <div class="dim" style="font-size:14px;margin-top:6px">A „Csak a program leállítása” a darts programot állítja le (mint a Ctrl+C), a gép fut tovább. Újraindítani csak a gépnél, vagy a gép újraindításával lehet.</div>
+      <button class="btn danger" id="quitbtn">■ Csak a program leállítása</button>
+      <div id="pwrnote" class="dim"></div>
+    </div>
+  </main>
+</div>
+
+<div id="modal"><div class="sheet" id="sheet"></div></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S = null, connected = false, lastView = null, pad = null;
+
+async function api(path, body){
+  try{
+    const r = await fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body||{})});
+    const j = await r.json().catch(()=>({}));
+    if(!r.ok){ toast(j.error || 'Hiba történt'); return false; }
+    return true;
+  }catch(e){ toast('Nincs kapcsolat a szerverrel'); return false; }
+}
+let toastT = null;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.style.display = 'block';
+  clearTimeout(toastT); toastT = setTimeout(()=>t.style.display='none', 3200);
+}
+
+function connect(){
+  const es = new EventSource('/api/events');
+  es.onmessage = ev => { connected = true; S = JSON.parse(ev.data); render(); };
+  es.onerror = () => { connected = false; renderHeader(); };
+}
+
+const fmt = l => l === '50' ? 'BULL' : l === 'MISS' ? 'Mellé' : l;
+const hhmm = t => new Date(t*1000).toLocaleTimeString('hu-HU', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+
+function renderHeader(){
+  const c = $('#conn'); let cls = 'bad', txt = 'nincs kapcsolat';
+  if(connected && S){
+    const st = S.engine_status || '';
+    const good = (st === 'figyel' || st === 'szimuláció');
+    cls = good ? 'ok' : 'warn'; txt = good ? (S.mode === 'sim' ? 'szimuláció' : 'kamerák rendben') : st;
+  }
+  c.className = 'pill ' + cls; c.querySelector('span').textContent = txt;
+}
+
+function render(){
+  renderHeader();
+  if(!S) return;
+  const view = S.game ? 'game' : 'start';
+  if(view === 'start'){
+    if(lastView !== 'start') $('#game').innerHTML = startHtml();
+    else refreshStartBoard();
+  } else {
+    $('#game').innerHTML = gameHtml();
+  }
+  lastView = view;
+}
+
+function slotHtml(d, old){
+  const eff = d.effective !== d.points;
+  const sub = d.bust ? 'túldobás' : eff ? '0 (nem nyitott)' : (d.uncertain ? 'bizonytalan' : d.points + ' pont');
+  return `<button class="slot full ${d.uncertain?'unc':''} ${d.bust?'bust':''} ${old?'old':''}" data-edit="${d.index}" data-label="${esc(d.label)}">${esc(fmt(d.label))}<small>${sub}</small></button>`;
+}
+
+function gameHtml(){
+  const g = S.game, cur = g.players[g.current];
+  let h = '';
+  if(S.warning) h += `<div class="banner sim">⚠ ${esc(S.warning)}</div>`;
+  if(S.mode === 'sim') h += `<div class="banner sim">SZIMULÁCIÓ – nincs kamera, a nyilakat kézzel „dobod” be (lent).</div>`;
+  if(g.legs > 1) h += `<div class="matchbar"><span>First to ${g.legs}</span><span>${g.winner === null ? g.leg_number + '. leg' : 'vége'}</span></div>`;
+  if(g.winner !== null) h += `<div class="banner win">🏆 ${esc(g.winner_name)} nyert!</div>`;
+  else if(g.leg_event && g.legs > 1) h += `<div class="banner wait">${esc(g.leg_event.name)} nyerte a(z) ${g.leg_event.leg}. legget.</div>`;
+  h += `<div class="players">` + g.players.map(p => `
+    <div class="pl ${p.current?'cur':''}">
+      <div class="nm"><span>${esc(p.name)}</span>${g.legs>1?`<span class="legs">${p.legs_won}</span>`:''}${p.current?'<small>dob</small>':''}</div>
+      <div class="rem">${p.remaining}</div>
+      <div class="meta">átlag: ${p.avg===null?'–':p.avg} · nyíl: ${p.darts}</div>
+    </div>`).join('') + `</div>`;
+
+  if(g.winner === null && g.checkouts && g.checkouts.length){
+    h += `<div class="co"><div class="cotitle">Kiszálló · ${esc(cur.name)}</div>` +
+         g.checkouts.map((o,i)=>`<div class="coopt ${i?'alt':''}">${o.map(l=>`<span class="cod">${esc(fmt(l))}</span>`).join('<i>›</i>')}</div>`).join('') + `</div>`;
+  }
+  let turnBlock = '';
+  if(g.winner === null){
+    const slots = [];
+    for(let i=0;i<3;i++) slots.push(g.turn[i] ? slotHtml(g.turn[i]) : `<div class="slot">–</div>`);
+    turnBlock += `<div class="turnhead"><b>${esc(cur.name)} köre</b><span>${g.darts_left} nyíl hátra · kör eleje: ${g.turn_start}</span></div>
+                  <div class="slots">${slots.join('')}</div>`;
+    if(g.turn_ended && g.last_turn){
+      const lt = g.last_turn;
+      turnBlock += `<div class="turnhead" style="margin-top:14px"><b class="dim" style="font-size:14px">Előző kör: ${esc(lt.name)}</b><span>${lt.bust?'túldobás (0)':lt.total+' pont'}</span></div>
+                    <div class="slots">${lt.darts.map(d=>slotHtml(d,true)).join('')}</div>`;
+    }
+  } else if(g.last_turn){
+    turnBlock += `<div class="turnhead"><b>Utolsó kör: ${esc(g.last_turn.name)}</b><span>${g.last_turn.total} pont</span></div>
+                  <div class="slots">${g.last_turn.darts.map(d=>slotHtml(d,false)).join('')}</div>`;
+  }
+  const anyUnc = [...g.turn, ...(g.last_turn?g.last_turn.darts:[])].some(d=>d.uncertain);
+
+  if(S.awaiting_clear && g.winner === null)
+    h += `<div class="banner wait">Húzd ki a nyilakat a tábláról – utána ${esc(cur.name)} jön.</div>`;
+
+  const dis = g.winner !== null ? 'disabled' : '';
+  h += `<div class="layout">
+      <div class="stack">
+        <div class="card">${turnBlock}${anyUnc?'<div class="banner warnb" style="margin-top:12px">⚠ Bizonytalan dobás – koppints rá, ha javítani kell.</div>':''}</div>
+        <div class="actions">
+          <button class="btn" data-act="undo" ${g.can_undo?'':'disabled'}>↶ Visszavonás</button>
+          <button class="btn" data-act="miss" ${dis}>Mellé (0)</button>
+          <button class="btn" data-act="add" ${dis}>＋ Kézi nyíl</button>
+          <button class="btn" data-act="end" ${dis}>Kör vége ⏭</button>
+        </div>
+      </div>
+      <div class="card">${boardSvg(S.board)}</div>
+    </div>`;
+
+  if(S.mode === 'sim') h += simCard();
+  h += `<details class="card log"><summary>Események (${S.log.length})</summary>${S.log.map(logRow).join('') || '<div class="dim">még nincs</div>'}</details>`;
+  h += `<button class="btn danger" data-act="newgame" style="width:100%">Új játék</button>`;
+  return h;
+}
+
+function simCard(){
+  return `<div class="card stack"><b>Szimuláció</b>
+    <div class="actions"><button class="btn" data-act="sim" style="grid-column:span 2">🎯 Nyíl bedobása</button><button class="btn" data-act="simclear" style="grid-column:span 2">Tábla kiürítése</button></div></div>`;
+}
+
+function logRow(l){
+  const what = l.type === 'throw' ? `Dobás: <b>${esc(fmt(l.label))}</b>${l.uncertain?' ⚠':''}`
+             : l.type === 'removed' ? `Kivéve: ${esc(fmt(l.label))}` : 'Tábla nullázva';
+  const note = l.type === 'throw' && !l.applied ? '<span class="x">(nem számolt: nincs játék)</span>' : '';
+  return `<div class="logrow"><span class="t">${hhmm(l.t)}</span><span>${what} ${note}</span></div>`;
+}
+
+let formState = {players:['', ''], start:501, dout:true, din:false, legs:1};
+try{ const s = JSON.parse(localStorage.getItem('dartsForm')||'null'); if(s && Array.isArray(s.players) && s.players.length) formState = s; }catch(e){}
+
+function startHtml(){
+  const f = formState;
+  return `<div class="card">
+    <h2 style="margin:0 0 4px;font-size:20px">Új játék</h2>
+    ${S && S.mode==='sim' ? '<div class="banner sim" style="margin-top:8px">SZIMULÁCIÓ – nincs kamera</div>' : ''}
+    <label class="f">Játékosok (1–4)</label>
+    <div id="plist">${f.players.map((n,i)=>`
+      <div class="row" style="margin-bottom:8px">
+        <input type="text" maxlength="20" placeholder="Játékos ${i+1}" value="${esc(n)}">
+        ${f.players.length>1?`<button class="btn" data-act="delp" data-i="${i}" style="min-width:48px" aria-label="játékos törlése">✕</button>`:''}
+      </div>`).join('')}</div>
+    ${f.players.length<4?'<button class="btn" data-act="addp">＋ játékos</button>':''}
+    <label class="f">Kezdő pontszám</label>
+    <div class="seg">${[301,501,701].map(v=>`<button class="btn ${f.start===v?'on':''}" data-act="start" data-v="${v}">${v}</button>`).join('')}</div>
+    <label class="f">Meccs (first to): hány leg megnyerése kell</label>
+    <select id="legs" class="txt" style="min-height:46px;width:100%">${Array.from({length:15},(_,i)=>i+1).map(n=>`<option value="${n}" ${(f.legs||1)===n?'selected':''}>${n===1?'1 – egyetlen játék':'first to '+n}</option>`).join('')}</select>
+    <label class="chk"><input type="checkbox" id="dout" ${f.dout?'checked':''}> Dupla kiszálló (a 0-t duplával kell elérni)</label>
+    <label class="chk"><input type="checkbox" id="din" ${f.din?'checked':''}> Dupla beszálló (az első dupla után számít)</label>
+    <button class="btn primary" data-act="go" style="width:100%;margin-top:8px">Indítás</button>
+  </div>
+  ${S && S.mode==='sim' ? simCard() : ''}
+  <div class="card" id="startboard">${boardSvg(S?S.board:[])}</div>`;
+}
+function refreshStartBoard(){ const b = $('#startboard'); if(b) b.innerHTML = boardSvg(S.board); }
+function saveForm(){ try{ localStorage.setItem('dartsForm', JSON.stringify(formState)); }catch(e){} }
+function readForm(){
+  const ins = [...document.querySelectorAll('#plist input')];
+  if(ins.length) formState.players = ins.map(i=>i.value);
+  const d = $('#dout'), n = $('#din'), l = $('#legs'); if(d) formState.dout = d.checked; if(n) formState.din = n.checked; if(l) formState.legs = +l.value || 1;
+}
+
+const SECT = [20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
+function pt(r,a){ const t=a*Math.PI/180; return [r*Math.sin(t), -r*Math.cos(t)]; }
+function arc(r1,r2,a1,a2){
+  const [x1,y1]=pt(r2,a1),[x2,y2]=pt(r2,a2),[x3,y3]=pt(r1,a2),[x4,y4]=pt(r1,a1);
+  const f = v => v.toFixed(2);
+  return `M${f(x1)} ${f(y1)}A${r2} ${r2} 0 0 1 ${f(x2)} ${f(y2)}L${f(x3)} ${f(y3)}A${r1} ${r1} 0 0 0 ${f(x4)} ${f(y4)}Z`;
+}
+const BOARD_BASE = (()=>{
+  let s = `<circle r="200" fill="#0b0d10"/>`;
+  SECT.forEach((n,i)=>{
+    const black = i%2===0, a1=i*18-9, a2=i*18+9;
+    const sing = black ? '#202020' : '#e9dfbf', ring = black ? '#c62828' : '#2e7d32';
+    s += `<path d="${arc(15.9,99,a1,a2)}" fill="${sing}"/><path d="${arc(99,107,a1,a2)}" fill="${ring}"/>`
+       + `<path d="${arc(107,162,a1,a2)}" fill="${sing}"/><path d="${arc(162,170,a1,a2)}" fill="${ring}"/>`;
+    const [tx,ty] = pt(186, i*18);
+    s += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" fill="#cfd8e0" font-size="14" font-weight="700" text-anchor="middle" dominant-baseline="central">${n}</text>`;
+  });
+  s += `<circle r="15.9" fill="#2e7d32"/><circle r="6.35" fill="#c62828"/>`;
+  return s;
+})();
+function boardSvg(darts){
+  let s = '';
+  (darts||[]).forEach(d=>{
+    s += `<circle cx="${d.x.toFixed(1)}" cy="${d.y.toFixed(1)}" r="5.5" fill="#00e5ff" stroke="#003845" stroke-width="1.5"/>`
+       + `<text x="${(d.x+8).toFixed(1)}" y="${(d.y-8).toFixed(1)}" font-size="13" font-weight="800" fill="#fff" stroke="#000" stroke-width="3" paint-order="stroke">${esc(fmt(d.label))}</text>`;
+  });
+  return `<svg class="board" viewBox="-205 -205 410 410" role="img" aria-label="Darts tábla">${BOARD_BASE}${s}</svg>`;
+}
+
+function openPad(mode, index, current){
+  pad = {mode, index, mult:'S', unc:false};
+  const title = mode==='mwrong' ? 'Mi volt a VALÓDI mező?' : mode==='mmissed' ? 'Melyik mezőbe dobtad (nem érzékelte)?' : mode==='edit' ? `Nyíl javítása (most: ${esc(fmt(current))})` : mode==='sim' ? 'Szimulált nyíl bedobása' : 'Kézi nyíl hozzáadása';
+  $('#sheet').innerHTML = `<h3>${title}</h3>
+    <div class="mult">${[['S','Egyes'],['D','Dupla'],['T','Tripla']].map(([m,t])=>`<button class="btn ${m==='S'?'on':''}" data-m="${m}">${t}</button>`).join('')}</div>
+    <div class="grid">${Array.from({length:20},(_,i)=>`<button class="btn" data-n="${i+1}">${i+1}</button>`).join('')}</div>
+    <div class="grid2"><button class="btn" data-l="25">25</button><button class="btn" data-l="50">BULL (50)</button>
+      ${mode==='sim' ? '<button class="btn" id="uncbtn" data-l="SIMUNC" style="grid-column:span 2">Bizonytalan dobás: KI</button>'
+                     : '<button class="btn" data-l="MISS" style="grid-column:span 2">Mellé (0)</button>'}</div>
+    <button class="btn" data-close="1" style="width:100%;margin-top:10px">${mode==='sim'?'Kész':'Mégse'}</button>`;
+  $('#modal').classList.add('open');
+}
+function closePad(){ $('#modal').classList.remove('open'); pad = null; }
+async function padPick(label){
+  const p = pad; if(!p) return;
+  if(p.mode === 'sim'){ await api('/api/sim/throw', {label, uncertain:p.unc}); return; }
+  if(p.mode === 'mwrong' || p.mode === 'mmissed'){
+    const ok = p.mode === 'mwrong' ? await api('/api/measure/label', {id:p.index, outcome:'wrong', true_label:label})
+                                   : await api('/api/measure/missed', {true_label:label});
+    if(ok){ closePad(); measLoad(); }
+    return;
+  }
+  const ok = p.mode === 'edit' ? await api('/api/edit', {index:p.index, label}) : await api('/api/add', {label});
+  if(ok) closePad();
+}
+$('#modal').addEventListener('click', e=>{
+  const t = e.target.closest('button');
+  if(e.target.id === 'modal' || (t && t.dataset.close)) return closePad();
+  if(!t || !pad) return;
+  if(t.dataset.m){
+    pad.mult = t.dataset.m;
+    document.querySelectorAll('.mult .btn').forEach(b=>b.classList.toggle('on', b===t));
+  } else if(t.dataset.n){
+    padPick(pad.mult + t.dataset.n);
+  } else if(t.dataset.l === 'SIMUNC'){
+    pad.unc = !pad.unc;
+    t.textContent = 'Bizonytalan dobás: ' + (pad.unc ? 'BE' : 'KI');
+    t.classList.toggle('on', pad.unc);
+  } else if(t.dataset.l){
+    padPick(t.dataset.l);
+  }
+});
+
+document.addEventListener('input', e=>{ if(e.target.matches('#plist input')){ readForm(); saveForm(); } });
+document.addEventListener('change', e=>{ if(e.target.matches('#dout,#din')){ readForm(); saveForm(); } });
+document.addEventListener('click', async e=>{
+  if(e.target.closest('#modal')) return;
+  const t = e.target.closest('button'); if(!t) return;
+  if(t.dataset.tab) return setTab(t.dataset.tab);
+  if(t.classList.contains('slot') && t.dataset.edit !== undefined) return openPad('edit', +t.dataset.edit, t.dataset.label);
+  const a = t.dataset.act; if(!a) return;
+  if(a==='undo') api('/api/undo');
+  else if(a==='miss') api('/api/add', {label:'MISS'});
+  else if(a==='add') openPad('add');
+  else if(a==='end') api('/api/end_turn');
+  else if(a==='sim') openPad('sim');
+  else if(a==='simclear') api('/api/sim/clear');
+  else if(a==='newgame'){ if(confirm('Biztosan új játékot kezdesz? A mostani játék elvész.')) api('/api/end_game'); }
+  else if(a==='addp'){ readForm(); if(formState.players.length<4){ formState.players.push(''); $('#game').innerHTML = startHtml(); saveForm(); } }
+  else if(a==='delp'){ readForm(); formState.players.splice(+t.dataset.i,1); $('#game').innerHTML = startHtml(); saveForm(); }
+  else if(a==='start'){ readForm(); formState.start = +t.dataset.v; saveForm(); $('#game').innerHTML = startHtml(); }
+  else if(a==='go'){
+    readForm(); saveForm();
+    const names = formState.players.map((n,i)=>n.trim() || ('Játékos '+(i+1)));
+    api('/api/new', {players:names, start:formState.start, double_out:formState.dout, double_in:formState.din, legs:formState.legs||1});
+  }
+});
+let pwrT = null;
+async function power(action){
+  if(!await api('/api/power', {action})) return;
+  clearInterval(pwrT);
+  if(action === 'cancel'){
+    $('#pwrcancel').classList.add('hidden'); $('#pwrnote').textContent = 'A művelet visszavonva.'; return;
+  }
+  let left = 15;
+  $('#pwrcancel').classList.remove('hidden');
+  const tick = ()=>{
+    $('#pwrnote').textContent = (action==='shutdown' ? 'Leállítás' : 'Újraindítás') + ` ${left} mp múlva...`;
+    if(left-- <= 0){ clearInterval(pwrT); $('#pwrcancel').classList.add('hidden');
+      $('#pwrnote').textContent = action==='shutdown' ? 'A gép leáll. Ez az oldal már nem fog válaszolni.' : 'A gép újraindul, kb. 1–2 perc múlva frissítsd az oldalt.'; }
+  };
+  tick(); pwrT = setInterval(tick, 1000);
+}
+$('#pwroff').addEventListener('click', ()=>{ if(confirm('Biztosan leállítod a mini PC-t?')) power('shutdown'); });
+$('#pwrrestart').addEventListener('click', ()=>{ if(confirm('Újraindítod a mini PC-t?')) power('restart'); });
+$('#quitbtn').addEventListener('click', async ()=>{
+  if(!confirm('Leállítod a darts programot? A gép fut tovább, de a program csak a gépnél (vagy a gép újraindításával) indítható újra.')) return;
+  if(await api('/api/power', {action:'quit'})) $('#pwrnote').textContent = 'A program leáll. Ez az oldal már nem fog válaszolni.';
+});
+$('#pwrcancel').addEventListener('click', ()=>power('cancel'));
+$('#boardreset').addEventListener('click', ()=>{
+  if(confirm('Nullázod a felismerés tábla-állapotát? (A pontszám nem változik.)')) api('/api/board_reset');
+});
+
+let statsName = null;
+const fdate = t => { try{ return new Date(t*1000).toLocaleString('hu-HU', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'}); }catch(e){ return ''; } };
+async function getJson(path){
+  try{ const r = await fetch(path); const j = await r.json().catch(()=>({})); if(!r.ok){ toast(j.error || 'Hiba történt'); return null; } return j; }
+  catch(e){ toast('Nincs kapcsolat a szerverrel'); return null; }
+}
+async function statsLoad(){
+  const body = $('#statsbody');
+  if(statsName){
+    const p = await getJson('/api/stats/player?name=' + encodeURIComponent(statsName));
+    if(!p){ statsName = null; return statsLoad(); }
+    body.innerHTML = playerHtml(p); return;
+  }
+  const d = await getJson('/api/stats/players');
+  if(!d){ body.innerHTML = '<div class="card dim">A statisztika most nem érhető el.</div>'; return; }
+  let h = '';
+  if(!d.players.length) h += `<div class="card dim">Még nincs mentett játékos. A statisztika csak a saját névvel (nem „Játékos 1…4”) indított játékokat menti – írd be a neveteket az új játék indításakor.</div>`;
+  h += d.players.map(p => `<button class="plrow" data-pl="${esc(p.name)}"><span><b>${esc(p.name)}</b><br><span class="dim" style="font-size:14px">${p.games} játék · ${p.wins} győzelem${p.win_pct===null?'':' ('+p.win_pct+'%)'}</span></span><span class="big">${p.avg===null?'–':p.avg}<small class="dim" style="font-size:12px;font-weight:600"> átlag</small></span></button>`).join('');
+  if(d.games.length){
+    h += `<div class="card"><div class="sec">Legutóbbi játékok</div>` + d.games.map(g => `
+      <div class="grow"><span>${fdate(g.time)} · ${g.start}<br><span class="dim" style="font-size:14px">${g.players.map(p=>esc(p.name)+(g.winner===p.name?' 🏆':'')).join(' – ')}${g.status==='abandoned'?' · félbehagyva':''}</span></span>
+      <button class="xbtn" data-delgame="${g.id}" aria-label="Játék törlése">✕</button></div>`).join('') + `</div>`;
+  }
+  body.innerHTML = h;
+}
+function sparkline(v){
+  if(v.length < 2) return '<div class="dim" style="font-size:14px">Az átlag alakulásához legalább 2 játék kell.</div>';
+  const W=320,H=90,P=8, mn=Math.min(...v), mx=Math.max(...v), rg=(mx-mn)||1;
+  const xy = v.map((a,i)=>[P+i*(W-2*P)/(v.length-1), H-P-(a-mn)/rg*(H-2*P)]);
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img" aria-label="Átlag alakulása">
+    <polyline fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" points="${xy.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}"/>
+    ${xy.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="var(--accent)"/>`).join('')}
+    <text x="${P}" y="12" font-size="11" fill="var(--dim)">${mx}</text><text x="${P}" y="${H-1}" font-size="11" fill="var(--dim)">${mn}</text></svg>`;
+}
+function heatSvg(points){
+  if(!points.length) return '<div class="dim" style="font-size:14px">Még nincs kamerával rögzített dobás.</div>';
+  const dots = points.map(p=>`<circle cx="${(+p[0]).toFixed(1)}" cy="${(+p[1]).toFixed(1)}" r="5" fill="#00e5ff" fill-opacity=".45"/>`).join('');
+  return `<svg class="board" viewBox="-205 -205 410 410" role="img" aria-label="Találatok a táblán">${BOARD_BASE}${dots}</svg>`;
+}
+function playerHtml(p){
+  const t = (v, l) => `<div class="stile"><b>${v===null||v===undefined?'–':v}</b><span>${l}</span></div>`;
+  return `<button class="btn" data-back="1" style="align-self:flex-start">← Vissza</button>
+    <div class="card stack"><div style="font-size:24px;font-weight:800">${esc(p.name)}</div>
+      <div class="sgrid">
+        ${t(p.avg,'átlag (3 nyíl)')}${t(p.games,'befejezett játék')}${t(p.win_pct===null?null:p.win_pct+'%','győzelem')}
+        ${t(p.best_turn,'legjobb kör')}${t(p.n180,'180-as')}${t(p.n140,'140–179')}${t(p.n100,'100–139')}
+        ${t(p.best_checkout,'legnagyobb kiszálló')}${t(p.best_leg_501,'legjobb 501 (nyíl)')}${t(p.busts,'túldobás')}${t(p.darts,'nyíl összesen')}${t(p.abandoned,'félbehagyott')}
+      </div></div>
+    <div class="card"><div class="sec">Átlag alakulása (legutóbbi játékok)</div>${sparkline(p.avg_history)}</div>
+    <div class="card"><div class="sec">Leggyakoribb mezők</div><div class="chips">${p.fields.map(f=>`<span class="chip">${esc(fmt(f.label))} · ${f.n}</span>`).join('') || '<span class="dim">–</span>'}</div></div>
+    <div class="card"><div class="sec">Találatok a táblán (kamerás dobások)</div>${heatSvg(p.points)}</div>
+    <div class="card"><div class="sec">Játékok</div>${p.games_recent.map(g=>`
+      <div class="grow"><span>${fdate(g.time)} · ${g.start}<br><span class="dim" style="font-size:14px">${g.opponents.length?'ellen: '+g.opponents.map(esc).join(', '):'egyedül'} · átlag ${g.avg===null?'–':g.avg} · ${g.darts} nyíl</span></span>
+      <span><span class="${g.won?'win':'lose'}">${g.status==='abandoned'?'félbehagyva':g.won?'győzelem':'vereség'}</span><button class="xbtn" data-delgame="${g.id}" aria-label="Játék törlése">✕</button></span></div>`).join('')}</div>
+    <button class="btn danger" data-delplayer="${esc(p.name)}">Játékos és adatai törlése</button>`;
+}
+$('#stats').addEventListener('click', async e => {
+  const t = e.target.closest('button'); if(!t) return;
+  if(t.dataset.pl){ statsName = t.dataset.pl; statsLoad(); }
+  else if(t.dataset.back){ statsName = null; statsLoad(); }
+  else if(t.dataset.delgame){ if(confirm('Törlöd ezt a játékot a statisztikából?') && await api('/api/stats/delete_game', {id:+t.dataset.delgame})) statsLoad(); }
+  else if(t.dataset.delplayer){ if(confirm('Biztosan törlöd ' + t.dataset.delplayer + ' profilját és összes játékát?') && await api('/api/stats/delete_player', {name:t.dataset.delplayer})){ statsName = null; statsLoad(); } }
+});
+
+let measTimer = null, measInit = false, measBusy = false, measSession = '';
+const pctf = v => v===null||v===undefined ? '–' : v + '%';
+function accBlock(b){
+  return `<tr><td>${esc(b.k)}</td><td>${b.n}</td><td>${pctf(b.accuracy)}</td><td>${b.accuracy_ci?b.accuracy_ci[0]+'–'+b.accuracy_ci[1]:'–'}</td><td>${b.wrong}</td><td>${b.missed}</td><td>${b.ghost}</td></tr>`;
+}
+function accTable(title, obj, labelFn){
+  const keys = Object.keys(obj);
+  if(!keys.length) return '';
+  return `<div class="card"><div class="sec">${title}</div><table class="mt"><tr><th></th><th>n</th><th>pontos</th><th>95% CI</th><th>téves</th><th>kimaradt</th><th>szellem</th></tr>
+    ${keys.map(k=>accBlock({...obj[k], k:labelFn?labelFn(k):k})).join('')}</table></div>`;
+}
+function measSummaryHtml(sm, sessions){
+  const o = sm.overall, f = sm.flag, l = sm.latency;
+  let h = `<div class="card stack"><div class="sec">Eredmények</div>
+    <select id="msel" class="txt" style="min-height:46px"><option value="">Minden mérés</option>${sessions.map(x=>`<option value="${esc(x)}" ${x===measSession?'selected':''}>${esc(x||'(név nélkül)')}</option>`).join('')}</select>
+    <div><span class="bigacc">${pctf(o.accuracy)}</span> <span class="dim">pontos mező · n=${o.n}${o.accuracy_ci?` · 95% CI: ${o.accuracy_ci[0]}–${o.accuracy_ci[1]}%`:''}</span></div>
+    <div class="sgrid">
+      <div class="stile"><b>${pctf(o.detection)}</b><span>felismerte a nyilat</span></div>
+      <div class="stile"><b>${pctf(o.precision)}</b><span>precizitás (szellem nélkül)</span></div>
+      <div class="stile"><b>${o.wrong}</b><span>téves mező</span></div>
+      <div class="stile"><b>${o.missed}</b><span>nem érzékelte</span></div>
+      <div class="stile"><b>${o.ghost}</b><span>szellem-dobás</span></div>
+      <div class="stile"><b>${l.median===null?'–':(l.median/1000).toFixed(1)+' s'}</b><span>késleltetés (medián)${l.p95===null?'':' · p95 '+(l.p95/1000).toFixed(1)+' s'}</span></div>
+    </div>
+    <div class="dim" style="font-size:14px">„⚠ bizonytalan” jelzés: ${f.flagged} jelzett dobásból ${f.flagged_wrong} téves; ${f.unflagged} jelöletlenből ${f.unflagged_wrong} téves.</div>
+    <a class="btn" style="text-align:center;text-decoration:none;color:var(--text)" href="/api/measure/export.csv${measSession ? '?session=' + encodeURIComponent(measSession) : ''}" download>⬇ ${measSession ? 'A(z) „' + esc(measSession) + '” mérés letöltése' : 'Minden mérés letöltése'} (CSV, Excel)</a></div>`;
+  h += accTable('Mérési feltételenként', sm.by_condition);
+  h += accTable('Mezőtípusonként (valódi mező)', sm.by_class);
+  h += accTable('Hány kamera látta (felismert dobások)', sm.by_cams, k=>k+' kamera');
+  if(sm.errors.length) h += `<div class="card"><div class="sec">Leggyakoribb tévesztések</div>${sm.errors.map(e=>`<div class="grow"><span>${esc(fmt(e.predicted))} → ${esc(fmt(e.true))}</span><b>${e.n}×</b></div>`).join('')}</div>`;
+  return h;
+}
+async function measLoad(){
+  if(measBusy) return; measBusy = true;
+  try{
+    let d = await getJson('/api/measure' + (measSession ? '?session=' + encodeURIComponent(measSession) : ''));
+    if(!d) return;
+    if(!measInit){
+      measInit = true;
+      if(d.session && d.sessions.includes(d.session) && !measSession){
+        measSession = d.session;
+        d = (await getJson('/api/measure?session=' + encodeURIComponent(measSession))) || d;
+      }
+      $('#mset').innerHTML = `<div class="sec">Mérési mód</div>
+        <input class="txt" id="msess" maxlength="40" placeholder="Mérés neve (pl. led-nappal-1)" value="${esc(d.session)}">
+        <input class="txt" id="mcond" maxlength="60" placeholder="Feltétel (pl. LED, nappal)" value="${esc(d.condition)}">
+        <div class="seg"><button class="btn ${d.on?'':'primary'}" data-m="1" data-on="0">Kikapcsolva</button><button class="btn ${d.on?'primary':''}" data-m="1" data-on="1">Bekapcsolva</button></div>
+        <div class="dim" style="font-size:14px">Bekapcsolt módban minden felismert dobás ide kerül a listába. Dobd be a nyilat, és koppints: ✓ helyes · ✎ téves (add meg a valódi mezőt) · 👻 szellem (nem volt ilyen dobás). Ha a nyilat nem érzékelte: „+ Nem érzékelte”.</div>`;
+    }
+    $('#mpend').innerHTML = (d.on ? '' : '<div class="banner wait">A mérési mód ki van kapcsolva – a dobások nem kerülnek a listába.</div>') + `
+      <div class="seg"><button class="btn" data-mall="1">✓ Mind helyes (${d.pending.length})</button><button class="btn" data-mmiss="1">+ Nem érzékelte</button></div>` +
+      (d.pending.length ? d.pending.map(p => `<div class="mp"><div class="lb">${esc(fmt(p.predicted))}<small>${p.cams||'?'} kamera${p.spread!=null?' · '+(+p.spread).toFixed(1)+' mm':''}${p.uncertain?' · ⚠':''}</small></div>
+          <div class="bt"><button class="btn" data-mok="${p.id}" aria-label="Helyes">✓</button><button class="btn" data-mwr="${p.id}" aria-label="Téves">✎</button><button class="btn" data-mgh="${p.id}" aria-label="Szellem">👻</button></div></div>`).join('')
+        + `<button class="btn danger" data-mclr="1">Függő lista törlése</button>` : '<div class="card dim">Nincs megerősítésre váró dobás.</div>');
+    $('#msum').innerHTML = measSummaryHtml(d.summary, d.sessions);
+  } finally { measBusy = false; }
+}
+$('#meas').addEventListener('change', e => { if(e.target.id==='msel'){ measSession = e.target.value; measLoad(); } });
+$('#meas').addEventListener('click', async e => {
+  const t = e.target.closest('button'); if(!t) return;
+  if(t.dataset.m){
+    await api('/api/measure/setup', {session:$('#msess').value, condition:$('#mcond').value, on:t.dataset.on==='1'});
+    measInit = false; measLoad();
+  }
+  else if(t.dataset.mok){ if(await api('/api/measure/label', {id:+t.dataset.mok, outcome:'correct'})) measLoad(); }
+  else if(t.dataset.mgh){ if(await api('/api/measure/label', {id:+t.dataset.mgh, outcome:'ghost'})) measLoad(); }
+  else if(t.dataset.mwr){ openPad('mwrong', +t.dataset.mwr); }
+  else if(t.dataset.mmiss){ openPad('mmissed'); }
+  else if(t.dataset.mall){ if(await api('/api/measure/all_correct')) measLoad(); }
+  else if(t.dataset.mclr){ if(confirm('Törlöd a megerősítésre váró dobásokat?') && await api('/api/measure/delete', {all_pending:true})) measLoad(); }
+});
+
+let camTimer = null, camUrl = null, camBusy = false;
+async function camRefresh(){
+  if(camBusy) return; camBusy = true;
+  try{
+    const r = await fetch('/api/view.jpg?t=' + Date.now(), {cache:'no-store'});
+    if(r.status === 200){
+      const u = URL.createObjectURL(await r.blob());
+      $('#camimg').src = u; $('#camimg').classList.remove('hidden'); $('#camnote').textContent = '';
+      if(camUrl) URL.revokeObjectURL(camUrl);
+      camUrl = u;
+    } else {
+      $('#camimg').classList.add('hidden');
+      $('#camnote').textContent = S && S.mode === 'sim' ? 'Szimulációban nincs kamerakép.' : 'Nincs kamerakép (a kamerák épp nem érhetők el).';
+    }
+  }catch(e){ $('#camnote').textContent = 'Nincs kapcsolat a szerverrel.'; }
+  camBusy = false;
+}
+function setTab(name){
+  for(const n of ['game','cams','stats','meas','sys']){
+    $('#'+n).classList.toggle('hidden', name!==n);
+    $('#tab-'+n).classList.toggle('on', name===n);
+  }
+  clearInterval(camTimer); clearInterval(measTimer);
+  if(name==='stats') statsLoad();
+  if(name==='meas'){ measInit = false; measLoad(); measTimer = setInterval(measLoad, 1500); }
+  if(name==='cams'){ camRefresh(); camTimer = setInterval(camRefresh, 1200); }
+}
+
+connect();
+</script>
+</body>
+</html>

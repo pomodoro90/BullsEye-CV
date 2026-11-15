@@ -1,0 +1,14 @@
+[Unit]
+Description=BullsEye-CV szerver
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=darts
+WorkingDirectory=/home/darts/BullsEye-CV
+ExecStart=/home/darts/BullsEye-CV/.venv/bin/python server.py --weights runs/tips/weights/best.pt --cams 0 1 2
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
