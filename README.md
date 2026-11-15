@@ -1,6 +1,6 @@
 # BullsEye-CV
 
-A BullsEye-CV (Bullseye Computer Vision) egy kameraalapú darts-pontozó rendszer. Három USB-kamera képéből valós időben felismeri a táblába érkező nyilakat, kiszámítja a pontértéket, és tetszőleges böngészőből (akár mobiltelefonról) is elérhető webes felületen vezeti a játékot és a statisztikát.
+A BullsEye-CV (Bullseye Computer Vision) egy kameraalapú darts pontozó rendszer. Három USB-kamera képéből valós időben felismeri a táblába érkező nyilakat, kiszámítja a pontértéket, és tetszőleges böngészőből (akár mobiltelefonról) is elérhető webes felületen vezeti a játékot és a statisztikát.
 
 A projekt egy BSc szakdolgozat gyakorlati része, melynek címe: *Kameraalapú objektumfelismerő és statisztikai rendszer megvalósítása beágyazott eszközökön sportanalitikai célokra* (Kovács Tamás, Gábor Dénes Egyetem, 2026).
 
@@ -16,7 +16,7 @@ A projekt egy BSc szakdolgozat gyakorlati része, melynek címe: *Kameraalapú o
 
 ## Követelmények
 
-**Kipróbáláshoz és teszteléshez** (szimulációs mód) nem kell szükséges hardver, bármilyen számítógép megfelel.
+**Kipróbáláshoz és teszteléshez** (szimulációs mód) nem szükséges célhardver, bármilyen számítógép megfelel.
 
 **Valós használathoz:**
 
